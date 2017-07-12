@@ -11,9 +11,16 @@ Allows users with admin access to view and purge the `debug.log` file kept insid
 * allows for loading the debug file in a new browser window
 * allows for purging the debug file
 
+# Roadmap
+* fancier formatting for log file
+* collapse / expand stack traces
+
 #### [Pull requests](https://github.com/norcross/debug-quick-look/pulls) are very much welcome and encouraged.
 
 ## Changelog
+
+#### Version 0.0.2 - 2017/07/12
+* Changed method for pulling and display log file to check for memory overload. Props [@rarst](https://github.com/Rarst)
 
 #### Version 0.0.1 - 2017/07/12
 * Initial release!

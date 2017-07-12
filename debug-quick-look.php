@@ -5,7 +5,7 @@
  * Description: Creates an admin bar link to view or purge the debug log file
  * Author: Andrew Norcross
  * Author URI: http://andrewnorcross.com/
- * Version: 0.0.1
+ * Version: 0.0.2
  * Text Domain: debug-quick-look
  * Requires WP: 4.4
  * Domain Path: languages
@@ -36,6 +36,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+// Define our version.
+if ( ! defined( 'DEBUG_QUICK_LOOK_VERS' ) ) {
+	define( 'DEBUG_QUICK_LOOK_VERS', '0.0.2' );
+}
 
 /**
  * Call our class.
@@ -138,7 +143,7 @@ class DebugQuickLook {
 		p.returnlink { text-align: center; font-size: 14px; line-height: 22px; }
 		p.nofile { text-align: center; font-size: 14px; line-height: 22px; font-style: italic; }
 		p.codeblock { background-color: #fff; color: #000; font-size: 14px; line-height: 22px; padding: 5px 15px; }
-		p.codeblock br { height: 5px; display: block; margin: 0; padding: 0; }
+		p.codeblock .empty-space { display: block; width: 100%; height: 0; margin: 10px 0 -10px; padding: 0; border-top: 1px dotted #ccc; }
 		p strong { font-weight: bold; }	p em { font-style: italic; }
 		code, pre { white-space: pre-wrap; white-space: -moz-pre-wrap; white-space: -pre-wrap; white-space: -o-pre-wrap; word-wrap: break-word; }
 		code pre, span.prewrap { color: #ff0000; }
@@ -161,30 +166,17 @@ class DebugQuickLook {
 		// We have a file. So start the additional checks.
 		if ( false !== $exists = $this->check_file_data() ) {
 
+			// Set our file.
+			$file   = WP_CONTENT_DIR . '/debug.log';
+
 			// We requested a viewing.
 			if ( 'view' === sanitize_key( $_GET['quickaction'] ) ) {
-
-				// Parse out the data.
-				$data   = file_get_contents( WP_CONTENT_DIR . '/debug.log' );
-
-				// Trim and break it up.
-				$data   = nl2br( trim( $data ) );
-
-				// Convert my line breaks.
-				$data   = str_replace( array( '<pre>', '</pre>' ), array( '<span class="prewrap">', '</span>' ), $data );
-
-				// Generate the actual output.
-				$build .= '<p class="codeblock"><code>' . $data . '</code></p>';
+				$build .= $this->view_log( $file );
 			}
 
 			// We requested a purging.
 			if ( 'purge' === sanitize_key( $_GET['quickaction'] ) ) {
-
-				// Clear out the data.
-				$purge  = file_put_contents( WP_CONTENT_DIR . '/debug.log', '' );
-
-				// Show a message.
-				$build .= '<p class="nofile">' . esc_html__( 'The log file has been purged.', 'debug-quick-look' ) . '</p>';
+				$build .= $this->purge_log( $file );
 			}
 		}
 
@@ -198,6 +190,125 @@ class DebugQuickLook {
 
 		// And die.
 		die();
+	}
+
+	/**
+	 * Our abstracted function for viewing the log file.
+	 *
+	 * @param  string $file  The filepath we are working with.
+	 *
+	 * @return string
+	 */
+	public function view_log( $file = '' ) {
+
+		// Parse out the data.
+		$data   = $this->parse_log( $file );
+
+		// Trim and break it up.
+		$data   = nl2br( trim( $data ) );
+
+		// Now convert the line break markup to an empty div.
+		$data   = str_replace( array( '<br>', '<br />' ), '<span class="empty-space">&nbsp;</span>', $data );
+
+		// Convert my pre tags to spans so we can style them.
+		$data   = str_replace( array( '<pre>', '</pre>' ), array( '<span class="prewrap">', '</span>' ), $data );
+
+		// Generate and return the actual output.
+		return '<p class="codeblock"><code>' . $data . '</code></p>';
+	}
+
+	/**
+	 * Our abstracted function for purging the log file.
+	 *
+	 * @param  string $file  The filepath we are working with.
+	 *
+	 * @return string
+	 */
+	public function purge_log( $file = '' ) {
+
+		// Purge the data file.
+		$purge  = file_put_contents( $file, '' );
+
+		// Generate and return the message.
+		return '<p class="nofile">' . esc_html__( 'The log file has been purged.', 'debug-quick-look' ) . '</p>';
+	}
+
+	/**
+	 * Parse my log file from the end in case it's too big.
+	 *
+	 * @link http://stackoverflow.com/questions/6451232/php-reading-large-files-from-end/6451391#6451391
+	 *
+	 * @param  string  $file   The filepath we are working with.
+	 * @param  integer $count  Our line count that we're working with.
+	 * @param  integer $size   How many bytes we safely wanna check.
+	 *
+	 * @return string
+	 */
+	public function parse_log( $file = '', $count = 100, $size = 512 ) {
+
+		// Set my empty.
+		$lines  = array();
+
+		// We will always have a fragment of a non-complete line, so keep this in here till we have our next entire line.
+		$left   = '';
+
+		// Open our file.
+		$readf  = fopen( $file, 'r' );
+
+		// Go to the end of the file.
+		fseek( $readf, 0, SEEK_END );
+
+		do {
+
+			// Confirm we can actually go back $size bytes
+			$check  = $size;
+
+			if ( ftell( $readf ) <= $size ) {
+				$check = ftell( $readf );
+			}
+
+			// Bail on an empty file.
+			if ( empty( $check ) ) {
+				break;
+			}
+
+			// Go back as many bytes as we can and read them to $data,
+			// and then move the file pointer back to where we were.
+			fseek( $readf, - $check, SEEK_CUR );
+
+			// Set the data.
+			$data  = fread( $readf, $check );
+
+			// Include the "leftovers".
+			$data .= $left;
+
+			// Seek back into it.
+			fseek( $readf, - $check, SEEK_CUR );
+
+			// Split lines by \n. Then reverse them, now the last line is most likely
+			// not a complete line which is why we do not directly add it, but
+			// append it to the data read the next time.
+			$split  = array_reverse( explode( "\n", $data ) );
+			$newls  = array_slice( $split, 0, - 1 );
+			$lines  = array_merge( $lines, $newls );
+			$left   = $split[ count( $split ) - 1 ];
+
+		} while ( count( $lines ) < $count && ftell( $readf ) != 0 );
+
+		// Check and add the extra line.
+		if ( ftell( $readf ) == 0 ) {
+			$lines[] = $left;
+		}
+
+		// Close the file we just dealt with.
+		fclose( $readf );
+
+		// Usually, we will read too many lines, correct that here.
+		$array  = array_slice( $lines, 0, $count );
+		$array  = array_reverse( array_filter( $array, 'strlen' ) );
+
+		// Convert my array to a large string.
+		return implode( "\n", $array );
 	}
 
 	/**
