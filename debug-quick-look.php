@@ -150,11 +150,6 @@ class DebugQuickLook {
 		// Set my empty.
 		$build  = '';
 
-		// If we have CSS values, return them.
-		if ( ! empty( $style ) ) {
-			$build .= '<style>' . $style . '</style>';
-		}
-
 		// Include a "back to admin" link.
 		$build .= '<p class="returnlink"><a href="' . admin_url( '/' ) . '">' . esc_html__( 'Return To Admin Dashboard', 'debug-quick-look' ) . '</a></p>';
 
@@ -191,6 +186,11 @@ class DebugQuickLook {
 				// Show a message.
 				$build .= '<p class="nofile">' . esc_html__( 'The log file has been purged.', 'debug-quick-look' ) . '</p>';
 			}
+		}
+
+		// If we have CSS values, echo them.
+		if ( ! empty( $style ) ) {
+			echo '<style>' . esc_attr( $style ) . '</style>';
 		}
 
 		// Echo out the build.
