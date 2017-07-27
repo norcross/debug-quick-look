@@ -19,6 +19,9 @@ Allows users with admin access to view and purge the `debug.log` file kept insid
 
 ## Changelog
 
+#### Version 0.0.3 - 2017/07/27
+* Simplify reasoning a bit. Props [@jtsternberg](https://github.com/jtsternberg)
+
 #### Version 0.0.2 - 2017/07/12
 * Changed method for pulling and display log file to check for memory overload. Props [@rarst](https://github.com/Rarst)
 

@@ -5,7 +5,7 @@
  * Description: Creates an admin bar link to view or purge the debug log file
  * Author: Andrew Norcross
  * Author URI: http://andrewnorcross.com/
- * Version: 0.0.2
+ * Version: 0.0.3
  * Text Domain: debug-quick-look
  * Requires WP: 4.4
  * Domain Path: languages
@@ -39,7 +39,7 @@
 
 // Define our version.
 if ( ! defined( 'DEBUG_QUICK_LOOK_VERS' ) ) {
-	define( 'DEBUG_QUICK_LOOK_VERS', '0.0.2' );
+	define( 'DEBUG_QUICK_LOOK_VERS', '0.0.3' );
 }
 
 /**
