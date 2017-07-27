@@ -53,8 +53,10 @@ class DebugQuickLook {
 	 * @return void
 	 */
 	public function init() {
-		add_action( 'wp_head',                      array( $this, 'add_warning_css'     )           );
-		add_action( 'admin_head',                   array( $this, 'add_warning_css'     )           );
+		if ( ! $this->has_debug_constant() ) {
+			add_action( 'wp_head',                      array( $this, 'add_warning_css'     )           );
+			add_action( 'admin_head',                   array( $this, 'add_warning_css'     )           );
+		}
 		add_action( 'admin_init',                   array( $this, 'process_debug_type'  )           );
 		add_action( 'admin_bar_menu',               array( $this, 'admin_bar_links'     ),  9999    );
 	}
@@ -65,7 +67,7 @@ class DebugQuickLook {
 	public function add_warning_css() {
 
 		// Bail if current user doesnt have cap or the constant is set.
-		if ( ! current_user_can( 'manage_options' ) || false !== $constant = $this->check_debug_constant() ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
@@ -88,7 +90,7 @@ class DebugQuickLook {
 	 *
 	 * @return boolean
 	 */
-	public function check_debug_constant() {
+	public function has_debug_constant() {
 		return defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ? true : false;
 	}
 
@@ -100,7 +102,7 @@ class DebugQuickLook {
 	public function check_file_data() {
 
 		// If the constant isn't set, return false right away.
-		if ( false === $constant = $this->check_debug_constant() ) {
+		if ( ! $this->has_debug_constant() ) {
 			return false;
 		}
 
@@ -159,12 +161,11 @@ class DebugQuickLook {
 		$build .= '<p class="returnlink"><a href="' . admin_url( '/' ) . '">' . esc_html__( 'Return To Admin Dashboard', 'debug-quick-look' ) . '</a></p>';
 
 		// Check to make sure we have a file.
-		if ( false === $exists = $this->check_file_data() ) {
+		if ( ! $this->check_file_data() ) {
 			$build .= '<p class="nofile">' . esc_html__( 'Your debug file is empty.', 'debug-quick-look' ) . '</p>';
-		}
 
 		// We have a file. So start the additional checks.
-		if ( false !== $exists = $this->check_file_data() ) {
+		} else {
 
 			// Set our file.
 			$file   = WP_CONTENT_DIR . '/debug.log';
@@ -334,7 +335,7 @@ class DebugQuickLook {
 		);
 
 		// Load the two links if we have the logging constant defined.
-		if ( false !== $constant = $this->check_debug_constant() ) {
+		if ( $this->has_debug_constant() ) {
 
 			// Make my links.
 			$view   = add_query_arg( array( 'quicklook' => 1, 'quickaction' => 'view' ), admin_url( '/' ) );
@@ -369,10 +370,9 @@ class DebugQuickLook {
 					),
 				)
 			);
-		}
 
 		// Load a warning message if we haven't defined it.
-		if ( false === $constant = $this->check_debug_constant() ) {
+		} else {
 
 			// Add the text node with our warning.
 			$wp_admin_bar->add_node(
