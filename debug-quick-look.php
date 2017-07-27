@@ -142,6 +142,7 @@ class DebugQuickLook {
 
 		// Create some basic CSS.
 		$style  = '
+		body#error-page { max-width: 1200px; }
 		p.returnlink { text-align: center; font-size: 14px; line-height: 22px; }
 		p.nofile { text-align: center; font-size: 14px; line-height: 22px; font-style: italic; }
 		p.codeblock { background-color: #fff; color: #000; font-size: 14px; line-height: 22px; padding: 5px 15px; }
@@ -186,11 +187,8 @@ class DebugQuickLook {
 			echo '<style>' . esc_attr( $style ) . '</style>';
 		}
 
-		// Echo out the build.
-		echo wp_kses_post( $build );
-
-		// And die.
-		die();
+		// Echo out the build and die.
+		wp_die( wp_kses_post( $build ), __( 'Debug Quick Look', 'debug-quick-look' ) );
 	}
 
 	/**
