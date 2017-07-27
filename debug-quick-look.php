@@ -54,11 +54,15 @@ class DebugQuickLook {
 	 */
 	public function init() {
 		if ( ! $this->has_debug_constant() ) {
-			add_action( 'wp_head',                      array( $this, 'add_warning_css'     )           );
-			add_action( 'admin_head',                   array( $this, 'add_warning_css'     )           );
+			add_action( 'wp_head'   , array( $this, 'add_warning_css' ) );
+			add_action( 'admin_head', array( $this, 'add_warning_css' ) );
 		}
-		add_action( 'admin_init',                   array( $this, 'process_debug_type'  )           );
-		add_action( 'admin_bar_menu',               array( $this, 'admin_bar_links'     ),  9999    );
+		add_action( 'admin_init'    , array( $this, 'process_debug_type' )       );
+		add_action( 'admin_bar_menu', array( $this, 'admin_bar_links'    ), 9999 );
+	}
+
+	public function user_can_view_log() {
+		return current_user_can( apply_filters( 'debug_quick_look_capability', 'manage_options' ) );
 	}
 
 	/**
@@ -67,7 +71,7 @@ class DebugQuickLook {
 	public function add_warning_css() {
 
 		// Bail if current user doesnt have cap or the constant is set.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_view_log() ) {
 			return;
 		}
 
@@ -91,7 +95,7 @@ class DebugQuickLook {
 	 * @return boolean
 	 */
 	public function has_debug_constant() {
-		return defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG ? true : false;
+		return apply_filters( 'debug_quick_look_has_constant', defined( 'WP_DEBUG_LOG' ) && WP_DEBUG_LOG );
 	}
 
 	/**
@@ -126,7 +130,7 @@ class DebugQuickLook {
 	public function process_debug_type() {
 
 		// Bail if current user doesnt have cap.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_view_log() ) {
 			return;
 		}
 
@@ -322,7 +326,7 @@ class DebugQuickLook {
 	public function admin_bar_links( WP_Admin_Bar $wp_admin_bar ) {
 
 		// Bail if current user doesnt have cap.
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! $this->user_can_view_log() ) {
 			return;
 		}
 
