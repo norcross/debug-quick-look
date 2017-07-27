@@ -157,8 +157,11 @@ class DebugQuickLook {
 		// Set my empty.
 		$build  = '';
 
+		// Get the referrer URL.
+		$referrer = wp_get_referer();
+
 		// Include a "back to admin" link.
-		$build .= '<p class="returnlink"><a href="' . admin_url( '/' ) . '">' . esc_html__( 'Return To Admin Dashboard', 'debug-quick-look' ) . '</a></p>';
+		$build .= '<p class="returnlink"><a href="' . ( $referrer ? $referrer : admin_url( '/' ) ) . '">' . esc_html__( 'Return To Admin Dashboard', 'debug-quick-look' ) . '</a></p>';
 
 		// Check to make sure we have a file.
 		if ( ! $this->check_file_data() ) {
