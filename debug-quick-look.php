@@ -172,7 +172,13 @@ class DebugQuickLook {
 
 			// We requested a viewing.
 			if ( 'view' === sanitize_key( $_GET['quickaction'] ) ) {
-				$build .= $this->view_log( $file );
+
+				// The default log view order.
+				$default_order = apply_filters( 'debug_quick_look_default_view_order', 'DESC' );
+
+				// Get requested log order. Defaults to descending (newest items at top).
+				$order = isset( $_GET['order'] ) ? ( 'ASC' === strtoupper( $_GET['order'] ) ? 'ASC' : 'DESC' ) : $default_order;
+				$build .= $this->view_log( $file, $order );
 			}
 
 			// We requested a purging.
@@ -196,17 +202,26 @@ class DebugQuickLook {
 	/**
 	 * Our abstracted function for viewing the log file.
 	 *
-	 * @param  string $file  The filepath we are working with.
+	 * @param  string  $file  The filepath we are working with.
+	 * @param  integer $order How the log lines are displayed, ascending or descending.
 	 *
 	 * @return string
 	 */
-	public function view_log( $file = '' ) {
+	public function view_log( $file = '', $order = 'ASC' ) {
 
 		// Parse out the data.
 		$data   = $this->parse_log( $file );
 
-		// Trim and break it up.
-		$data   = nl2br( trim( $data ) );
+		// Trim it.
+		$data   = trim( $data );
+
+		// If requested, reverse the order of the output.
+		if ( 'DESC' === $order ) {
+			$data = implode( PHP_EOL . '[', array_reverse( explode( PHP_EOL . '[', $data ) ) );
+		}
+
+		// Break it up.
+		$data   = nl2br( $data );
 
 		// Now convert the line break markup to an empty div.
 		$data   = str_replace( array( '<br>', '<br />' ), '<span class="empty-space">&nbsp;</span>', $data );
@@ -289,7 +304,7 @@ class DebugQuickLook {
 			// Split lines by \n. Then reverse them, now the last line is most likely
 			// not a complete line which is why we do not directly add it, but
 			// append it to the data read the next time.
-			$split  = array_reverse( explode( "\n", $data ) );
+			$split  = array_reverse( explode( PHP_EOL, $data ) );
 			$newls  = array_slice( $split, 0, - 1 );
 			$lines  = array_merge( $lines, $newls );
 			$left   = $split[ count( $split ) - 1 ];
@@ -309,7 +324,7 @@ class DebugQuickLook {
 		$array  = array_reverse( array_filter( $array, 'strlen' ) );
 
 		// Convert my array to a large string.
-		return implode( "\n", $array );
+		return implode( PHP_EOL, $array );
 	}
 
 	/**
