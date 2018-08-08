@@ -1,18 +1,18 @@
 <?php
 /**
- * Plugin Name       : Debug Quick Look
- * Plugin URI        : https://github.com/norcross/debug-quick-look
- * Description       : Creates an admin bar link to view or purge the debug log file
- * Author            : Andrew Norcross
- * Author URI        : http://andrewnorcross.com
- * Text Domain       : debug-quick-look
- * Domain Path       : /languages
- * Version           : 0.1.0
- * License           : MIT
- * License URI       : https://opensource.org/licenses/MIT
- * GitHub Plugin URI : https://github.com/norcross/debug-quick-look
+ * Plugin Name:         Debug Quick Look
+ * Plugin URI:          https://github.com/norcross/debug-quick-look
+ * Description:         Creates an admin bar link to view or purge the debug log file.
+ * Author:              Andrew Norcross
+ * Author URI:          http://andrewnorcross.com
+ * Text Domain:         debug-quick-look
+ * Domain Path:         /languages
+ * Version:             0.1.0
+ * License:             MIT
+ * License URI:         https://opensource.org/licenses/MIT
+ * GitHub Plugin URI:   https://github.com/norcross/debug-quick-look
  *
- * @package         DebugQuickLook
+ * @package             DebugQuickLook
  */
 
 // Call our namepsace.
