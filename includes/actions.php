@@ -28,9 +28,12 @@ add_action( 'admin_notices', __NAMESPACE__ . '\display_purge_result' );
  */
 function run_quicklook_action() {
 
-	// Bail if current user doesnt have cap.
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return; // @@todo convert to filtered.
+	// Run my cap check.
+	$hascap = Helpers\check_user_cap( 'quicklook-action' );
+
+	// Bail without.
+	if ( ! $hascap ) {
+		return;
 	}
 
 	// Bail without the query strings or not on admin.
@@ -38,26 +41,33 @@ function run_quicklook_action() {
 		return;
 	}
 
+	// Set our debug key.
+	$setkey = sanitize_text_field( $_GET['debug'] );
+
 	// Check to see if our nonce was provided.
-	if ( empty( $_GET['nonce'] ) || ! wp_verify_nonce( $_GET['nonce'], 'debug_quicklook_' . sanitize_text_field( $_GET['debug'] ) . '_action' ) ) {
+	if ( empty( $_GET['nonce'] ) || ! wp_verify_nonce( $_GET['nonce'], 'debug_quicklook_' . $setkey . '_action' ) ) {
 		return;
 	}
 
+	// Include our action to run beforehand.
+	do_action( Core\HOOK_PREFIX . 'before_action', $setkey );
+
 	// Switch through and return the item.
-	switch ( sanitize_text_field( $_GET['debug'] ) ) {
+	switch ( esc_attr( $setkey ) ) {
 
 		case 'view' :
 			Parser\run_parse();
 			break;
 
 		case 'purge' :
-			Helpers\purge_log_file();
+			Helpers\purge_debug_file();
 			break;
 
 		// End all case breaks.
 	}
 
-	// @@todo see if another action is needed.
+	// Include our action to run afterwards.
+	do_action( Core\HOOK_PREFIX . 'after_action', $setkey );
 
 	// And just be finished.
 	return;
@@ -66,15 +76,14 @@ function run_quicklook_action() {
 /**
  * Add our custom strings to the vars.
  *
- * @param array $args  The existing array of args.
+ * @param  array $args  The existing array of args.
+ *
+ * @return array $args  The modified array of args.
  */
 function add_removable_arg( $args ) {
 
-    // Include my new arg.
-	array_push( $args, 'quicklook' );
-
-	// And return the args.
-	return $args;
+    // Include my new args and return.
+	return wp_parse_args( array( 'quicklook', 'quickpurge' ), $args );
 }
 
 /**

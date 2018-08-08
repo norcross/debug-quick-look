@@ -34,7 +34,7 @@ function build_handler( $message, $title = '', $args = array() ) {
 	$build .= '<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">';
 
 	// Output the head tag.
-	$build .= handler_head_tag( $title );
+	$build .= handler_head_tag( $title, $args );
 
 	// Output the body.
 	$build .= handler_body_tag( $message, $args );
@@ -53,11 +53,12 @@ function build_handler( $message, $title = '', $args = array() ) {
  * Set up the <head> tag.
  *
  * @param  string  $title  The title to output.
+ * @param  array   $args   The optional args that were passed.
  * @param  boolean $echo   Whether to echo or return.
  *
  * @return mixed
  */
-function handler_head_tag( $title = '', $echo = false ) {
+function handler_head_tag( $title = '', $args = array(), $echo = false ) {
 
 	// Determine the page title.
 	$title  = ! empty( $title ) ? sanitize_text_field( $title ) : __( 'View Your File', 'debug-quick-look' );
@@ -67,6 +68,9 @@ function handler_head_tag( $title = '', $echo = false ) {
 
 	// Set the opening head tag.
 	$build .= '<head>' . "\n";
+
+		// Include our action to run after we opened the head tag.
+		$build .= do_action( Core\HOOK_PREFIX . 'after_head_tag_open', $args );
 
 		// Include the basic meta tags.
 		$build .= '<meta charset="utf-8">' . "\n";
@@ -83,6 +87,9 @@ function handler_head_tag( $title = '', $echo = false ) {
 
 		// Output the title tag.
 		$build .= '<title>' . esc_html( $title ) . '</title>' . "\n";
+
+		// Include our action to run before we close the head tag.
+		$build .= do_action( Core\HOOK_PREFIX . 'before_head_tag_close', $args );
 
 	// Close out the head tag.
 	$build .= '</head>';
@@ -113,11 +120,17 @@ function handler_body_tag( $message = '', $args = array(), $echo = false ) {
 	// Set the opening body tag.
 	$build .= '<body class="debug-quick-look">' . "\n";
 
+		// Include our action to run after we opened the body tag.
+		$build .= do_action( Core\HOOK_PREFIX . 'after_body_tag_open', $args );
+
 		// Set the intro
 		$build .= load_handler_intro( $args );
 
 		// Output the message.
 		$build .= load_handler_message( $message );
+
+		// Include our action to run before we close the body tag.
+		$build .= do_action( Core\HOOK_PREFIX . 'before_body_tag_close', $args );
 
 	// Close out the body tag.
 	$build .= '</body>';
@@ -139,7 +152,7 @@ function handler_body_tag( $message = '', $args = array(), $echo = false ) {
 function load_handler_css() {
 
 	// Set my stylesheet URL.
-	$stylesheet = Core\ASSETS_URL . '/css/debug-quick-look.css';
+	$stylesheet = apply_filters( Core\HOOK_PREFIX . 'stylesheet', Core\ASSETS_URL . '/css/debug-quick-look.css' );
 
 	// If we haven't already run the admin_head function, output the file.
 	if ( ! did_action( 'admin_head' ) ) {
@@ -154,8 +167,11 @@ function load_handler_css() {
 	// Get my raw CSS.
 	$style  = @file_get_contents( $stylesheet );
 
+	// Set it displayed via filter.
+	$display = apply_filters( Core\HOOK_PREFIX . 'raw_css', $style );
+
 	// Wrap it in a style tag and return it.
-	return '<style type="text/css">' . $style . '</style>' . "\n";
+	return ! $display ? false : '<style type="text/css">' . $display . '</style>' . "\n";
 }
 
 /**
@@ -172,6 +188,9 @@ function load_handler_intro( $args = array() ) {
 		return;
 	}
 
+	// Set my purge URL.
+	$purge  = Helpers\build_quicklook_url( 'purge' );
+
 	// Set the totals variable.
 	$ttlnum = ! empty( $args['totals'] ) ? $args['totals'] : 0;
 
@@ -187,17 +206,26 @@ function load_handler_intro( $args = array() ) {
 		// Output the paragraph wrapper.
 		$build .= '<p>';
 
-			// Handle the link output.
-			$build .= '<a href="' . admin_url( '/' ) . '">&laquo; ' . esc_html__( 'Return To Admin Dashboard', 'debug-quick-look' ) . '</a>';
+			// Handle the return link output.
+			$build .= '<a class="debug-intro-link debug-intro-return-link" href="' . admin_url( '/' ) . '">&laquo; ' . esc_html__( 'Return To Admin Dashboard', 'debug-quick-look' ) . '</a>';
 
 			// Output the entry count.
-			$build .= '<span class="debug-quick-look-intro-entry-count">' . $totals . '</span>';
+			$build .= '<span class="debug-quick-look-intro-count">' . $totals . '</span>';
+
+			// Handle the purge links output.
+			$build .= '<a class="debug-intro-link debug-intro-purge-link" href="' . esc_url( $purge ) . '">&times; ' . esc_html__( 'Purge File', 'debug-quick-look' ) . '</a>';
 
 		// Close the paragraph
 		$build .= '</p>' . "\n";
 
+		// Include our action to run inside the div.
+		$build .= do_action( Core\HOOK_PREFIX . 'inside_intro_block', $args );
+
 	// Close out the div tag.
 	$build .= '</div>' . "\n";
+
+	// Include our action to run after the div.
+	$build .= do_action( Core\HOOK_PREFIX . 'after_intro_block', $args );
 
 	// Just return the build.
 	return $build;

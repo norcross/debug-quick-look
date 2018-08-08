@@ -20,11 +20,19 @@ use DebugQuickLook\Formatting as Formatting;
  */
 function run_parse() {
 
+	// Check to see if we have our constant.
+	$hascon = Helpers\maybe_constant_set();
+
+	// If no constant is set, display that message.
+	if ( ! $hascon ) {
+		wp_die( __( 'You have not set the WP_DEBUG constant correctly.', 'debug-quick-look' ), __( 'Config Setup Error', 'debug-quick-look' ) );
+	}
+
 	// Add the new die handler.
 	add_filter( 'wp_die_handler', __NAMESPACE__ . '\die_handler' );
 
 	// Parse it.
-	$parsed = parse_debug_log( Core\DEBUG_FILE );
+	$parsed = parse_debug_file( Helpers\get_debug_file() );
 
 	// And show the world.
 	wp_die( $parsed['display'], __( 'View Your File', 'debug-quick-look' ), array( 'totals' => absint( $parsed['totals'] ) ) );
@@ -38,11 +46,10 @@ function run_parse() {
  *
  * @return mixed
  */
-function parse_debug_log( $logfile = '', $order = 'desc' ) {
+function parse_debug_file( $logfile = '', $order = 'asc' ) {
 
 	// Fetch the full lines.
 	$lines  = file( $logfile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES );
-	//preprint( $lines, true );
 
 	// Run a quick right trim on each line.
 	$lines  = array_map( 'rtrim', $lines );
@@ -88,16 +95,13 @@ function parse_debug_log( $logfile = '', $order = 'desc' ) {
 	// Reset the array keys.
 	$setup  = array_values( $setup );
 
-	// Wrap the divs.
+	// Run our individual formatting.
 	$setup  = Formatting\format_parsed_lines( $setup );
 
 	// If we wanted descending, swap.
 	if ( 'desc' === sanitize_text_field( $order ) ) {
 		$setup  = array_reverse( $setup );
 	}
-
-	// Dump it.
-	//preprint( $setup, true );
 
 	// Return an array of the markup and count.
 	return array(
@@ -114,5 +118,5 @@ function parse_debug_log( $logfile = '', $order = 'desc' ) {
  * @return string
  */
 function die_handler( $die_handler ) {
-	return '\DebugQuickLook\Handler\build_handler';
+	return apply_filters( Core\HOOK_PREFIX . 'die_handler', '\DebugQuickLook\Handler\build_handler', $die_handler );
 }

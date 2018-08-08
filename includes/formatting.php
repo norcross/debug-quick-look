@@ -20,6 +20,11 @@ use DebugQuickLook\Helpers as Helpers;
  * @return array
  */
 function format_parsed_lines( $lines ) {
+
+	// Filter the lines.
+	$lines  = apply_filters( Core\HOOK_PREFIX . 'before_line_parse', $lines );
+
+	// Now return the lines.
 	return array_map( __NAMESPACE__ . '\format_single_line', $lines );
 }
 
@@ -33,40 +38,28 @@ function format_parsed_lines( $lines ) {
 function format_single_line( $single ) {
 
 	// Set our block class before we start manupulating.
-	$class  = set_parse_block_class( $single );
+	$div_class  = set_parse_block_class( $single );
 
-	// Parse my dateblock.
-	$single = wrap_dateblock( $single );
+	// Get our formatting args.
+	$formatting = Helpers\get_formatting_args();
 
-	// Check for the stack trace.
-	$single = wrap_stacktrace( $single );
+	// Do something if we have no formatting.
+	if ( ! $formatting ) {
+		return wrap_final_return( $single, $div_class );
+	}
 
-	// And the warning types.
-	$single = wrap_warning_types( $single );
+	// Loop our formatting functions.
+	foreach ( $formatting as $format => $source ) {
 
-	// Format any JSON we may have.
-	$single = wrap_json_bits( $single );
+		// Check which formatting callback is setup.
+		$format = 'native' !== sanitize_text_field( $source ) ? $format : __NAMESPACE__ . $format;
 
-	// Now set our display.
-	$build  = '';
-
-	// Set the div wrapper.
-	$build .= '<div class="' . esc_attr( $class ) . '">';
-
-		// Add a second div wrapper to mimic the <pre> tag stuff.
-		$build .= '<div class="log-entry-block-pre-wrap">';
-
-			// Output to handle the text remaining.
-			$build .= wpautop( $single, false ) . "\n";
-
-		// Close the div wrapper.
-		$build .= '</div>';
-
-	// Close the div wrapper.
-	$build .= '</div>';
+		// Run each function individually.
+		$single = call_user_func( $format, $single );
+	}
 
 	// Now return the whole thing.
-	return $build;
+	return wrap_final_return( $single, $div_class );
 }
 
 /**
@@ -88,6 +81,9 @@ function set_parse_block_class( $single ) {
 		'wp-community' => 'WP_Community_Events',
 	);
 
+	// Filter the available types.
+	$types  = apply_filters( Core\HOOK_PREFIX . 'block_class_types', $types );
+
 	// Set our default class.
 	$data[] = 'log-entry-block';
 
@@ -103,10 +99,11 @@ function set_parse_block_class( $single ) {
 		$data[] = 'log-entry-block-' . esc_attr( $key );
 	}
 
-	// @@todo add a filter here.
+	// Filter the array of classes.
+	$items  = apply_filters( Core\HOOK_PREFIX . 'block_classes', $data );
 
 	// Make sure each one is sanitized.
-	$setup  = array_map( 'sanitize_html_class', $data );
+	$setup  = array_map( 'sanitize_html_class', $items );
 
 	// Return the whole thing.
 	return implode( ' ', $setup );
@@ -153,10 +150,11 @@ function wrap_dateblock( $single ) {
 	// Set the markup.
 	$markup = '<span class="log-entry-date"><time datetime="' . esc_attr( $fdate ) . '">' . $matches[0] . '</time></span>';
 
-	// @@todo add a filter here.
-
 	// Wrap the dateblock itself in a time.
-	return str_replace( $matches[0], $markup, $single );
+	$setup  = str_replace( $matches[0], $markup, $single );
+
+	// Return it.
+	return apply_filters( Core\HOOK_PREFIX . 'dateblock_wrap', $setup, $single );
 }
 
 /**
@@ -179,28 +177,34 @@ function wrap_stacktrace( $single ) {
 		return $single;
 	}
 
+	// Set our string to be modified.
+	$setup  = $single;
+
 	// Create an array of the stack data.
-	$array  = explode( PHP_EOL, $matches[1] );
+	$items  = explode( PHP_EOL, $matches[1] );
+
+	// Set the empty list tagged items.
+	$ltags  = '';
 
 	// Wrap each one with a list tag.
-	$mapped = array_map( __NAMESPACE__ . '\wrap_stack_list', $array );
-
-	// Now pull it back in.
-	$ltags  = implode( '', $mapped );
+	foreach ( $items as $line_item ) {
+		$ltags .= '<li class="log-entry-stack-trace-list-item">' . trim( $line_item ) . '</li>';
+	}
 
 	// Wrap the list with the ul tag.
 	$ulwrap = '<ul class="log-entry-stack-trace-list-wrap">' . $ltags . '</ul>';
 
 	// Now merge in the list.
-	$merged = str_replace( $matches[1], $ulwrap, $single );
+	$merged = str_replace( $matches[1], $ulwrap, $setup );
 
 	// Set my title.
 	$twrap  = '<p class="log-entry-stack-trace-title">Stack trace:</p>';
 
-	// @@todo add a filter here.
+	// Wrap the stack trace word in a paragraph.
+	$setup  = str_replace( 'Stack trace:', $twrap, $merged );
 
-	// And return it, wrapping the word in a paragraph.
-	return str_replace( 'Stack trace:', $twrap, $merged );
+	// Return it.
+	return apply_filters( Core\HOOK_PREFIX . 'stacktrace_wrap', $setup, $single );
 }
 
 /**
@@ -221,7 +225,11 @@ function wrap_warning_types( $single ) {
 		'wp-community' => 'WP_Community_Events::maybe_log_events_response: ',
 	);
 
-	// @@todo add a filter here.
+	// Filter the available types.
+	$types  = apply_filters( Core\HOOK_PREFIX . 'warning_types', $types );
+
+	// Set our string to be modified.
+	$setup  = $single;
 
 	// Now loop them and check each one.
 	foreach ( $types as $key => $text ) {
@@ -238,13 +246,11 @@ function wrap_warning_types( $single ) {
 		$markup = '<span class="' . esc_attr( $nclass ) . '">' . esc_html( rtrim( $text, ': ' ) ) . '</span>' . PHP_EOL;
 
 		// Now wrap it in some markup.
-		$single = str_replace( $text, $markup, $single );
+		$setup  = str_replace( $text, $markup, $setup );
 	}
 
-	// @@todo add a filter here.
-
-	// And return the trimmed single.
-	return $single;
+	// Return it with our filter.
+	return apply_filters( Core\HOOK_PREFIX . 'warning_types_wrap', $setup, $single );
 }
 
 /**
@@ -267,6 +273,9 @@ function wrap_json_bits( $single ) {
 		return $single;
 	}
 
+	// Set our string to be modified.
+	$setup  = $single;
+
 	// Loop each bit of JSON and attempt to format it.
 	foreach ( $matches[0] as $found_json ) {
 
@@ -282,33 +291,16 @@ function wrap_json_bits( $single ) {
 		$markup = '<div class="log-entry-json-array-section">' . format_json_array( $maybe_json ) . '</div>';
 
 		// Now wrap it in some markup.
-		$single = str_replace( $found_json, $markup, $single );
+		$setup  = str_replace( $found_json, $markup, $setup );
 	}
 
-	// @@todo add a filter here.
-
-	// And return the trimmed single.
-	return $single;
+	// Return it with our filter.
+	return apply_filters( Core\HOOK_PREFIX . 'json_bits_wrap', $setup, $single );
 }
 
 /**************************************
   Set the various callback formatting.
 ***************************************/
-
-/**
- * Wrap any stack trace list with list markup.
- *
- * @param  string $single  The single line from the log file.
- *
- * @return string $single  The formatted line from the log file.
- */
-function wrap_stack_list( $single ) {
-
-	// @@todo add a filter here.
-
-	// And return the trimmed single.
-	return '<li class="log-entry-stack-trace-list-item">' . trim( $single ) . '</li>';
-}
 
 /**
  * Take the JSON array and make it fancy.
@@ -360,5 +352,37 @@ function format_json_array( $maybe_json ) {
 	$build .= '</ul>';
 
 	// Return the entire thing.
+	return $build;
+}
+
+/**
+ * Handle the final markup adding.
+ *
+ * @param  string $single  The formatted line from the log file.
+ * @param  string $class   What class to include on the div.
+ *
+ * @return string $build   The line wrapped in some divs.
+ */
+function wrap_final_return( $single, $class = '' ) {
+
+	// Now set our display.
+	$build  = '';
+
+	// Set the div wrapper.
+	$build .= '<div class="' . esc_attr( $class ) . '">';
+
+		// Add a second div wrapper to mimic the <pre> tag stuff.
+		$build .= '<div class="log-entry-block-pre-wrap">';
+
+			// Output to handle the text remaining.
+			$build .= wpautop( $single, false ); // . "\n";
+
+		// Close the div wrapper.
+		$build .= '</div>';
+
+	// Close the div wrapper.
+	$build .= '</div>';
+
+	// Now return the whole thing.
 	return $build;
 }

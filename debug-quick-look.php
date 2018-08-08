@@ -33,6 +33,9 @@ define( __NAMESPACE__ . '\FILE', __FILE__ );
 // Set our assets directory constant.
 define( __NAMESPACE__ . '\ASSETS_URL', URL . 'assets' );
 
+// Set the prefix for our actions and filters.
+define( __NAMESPACE__ . '\HOOK_PREFIX', 'debug_quick_look_' );
+
 // Set the debug file we wanna use.
 define( __NAMESPACE__ . '\DEBUG_FILE', WP_CONTENT_DIR . '/debug.log' );
 

@@ -24,9 +24,12 @@ add_action( 'admin_bar_menu', __NAMESPACE__ . '\admin_bar_links', 9999 );
  */
 function add_warning_css() {
 
-	// Bail if current user doesnt have cap or the constant is set.
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return; // @@todo convert to filtered.
+	// Run my cap check.
+	$hascap = Helpers\check_user_cap( 'warning-css' );
+
+	// Bail without.
+	if ( ! $hascap ) {
+		return;
 	}
 
 	// Open the style tag.
@@ -52,9 +55,12 @@ function add_warning_css() {
  */
 function admin_bar_links( $wp_admin_bar ) {
 
-	// Bail if current user doesnt have cap.
-	if ( ! current_user_can( 'manage_options' ) ) {
-		return; // @@todo convert to filtered.
+	// Run my cap check.
+	$hascap = Helpers\check_user_cap( 'admin-bar' );
+
+	// Bail without.
+	if ( ! $hascap ) {
+		return;
 	}
 
 	// Fetch my nodes.
@@ -72,6 +78,22 @@ function admin_bar_links( $wp_admin_bar ) {
 			'title' => __( 'Debug Quick Look', 'debug-quick-look' ),
 		)
 	);
+
+	// Check to see if we have our constant.
+	$hascon = Helpers\maybe_constant_set();
+
+	// If no constant is set, show the error.
+	if ( ! $hascon ) {
+
+		// Show the error node.
+		$wp_admin_bar->add_node( $nodes['error'] );
+
+		// And be done.
+		return;
+	}
+
+	// We have the constant, so unset the error.
+	unset( $nodes['error'] );
 
 	// Loop my node data.
 	foreach ( $nodes as $node_name => $node_data ) {
