@@ -40,6 +40,7 @@ define( __NAMESPACE__ . '\HOOK_PREFIX', 'debug_quick_look_' );
 define( __NAMESPACE__ . '\DEBUG_FILE', WP_CONTENT_DIR . '/debug.log' );
 
 // Go and load our files.
+require_once __DIR__ . '/includes/activate.php';
 require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/admin-bar.php';
 require_once __DIR__ . '/includes/actions.php';
