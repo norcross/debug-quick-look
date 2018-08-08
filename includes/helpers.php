@@ -27,6 +27,7 @@ function get_admin_bar_nodes() {
 		'parent'    => 'debug-quick-look',
 		'meta'      => array(
 			'title'     => __( 'View Log', 'debug-quick-look' ),
+			'target'    => '_blank',
 		),
 	);
 
