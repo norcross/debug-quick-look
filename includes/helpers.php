@@ -41,6 +41,20 @@ function get_admin_bar_nodes() {
 		),
 	);
 
+	// Set the raw args.
+	$raw_args   = array(
+		'id'        => 'quick-look-raw',
+		'title'     => __( 'View File (Raw)', 'debug-quick-look' ),
+		'href'      => esc_url( build_quicklook_url( 'raw' ) ),
+		'position'  => 0,
+		'parent'    => 'debug-quick-look',
+		'meta'      => array(
+			'title'     => __( 'View File (Raw)', 'debug-quick-look' ),
+			'target'    => '_blank',
+			'rel'       => 'noopener',
+		),
+	);
+
 	// Set the purge args.
 	$purge_args = array(
 		'id'        => 'quick-look-purge',
@@ -65,7 +79,7 @@ function get_admin_bar_nodes() {
 	);
 
 	// Return the array of data.
-	return array( 'view' => $view_args, 'purge' => $purge_args, 'error' => $error_args );
+	return array( 'view' => $view_args, 'raw' => $raw_args, 'purge' => $purge_args, 'error' => $error_args );
 }
 
 /**

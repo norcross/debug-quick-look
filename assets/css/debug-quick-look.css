@@ -142,3 +142,16 @@ body {
 	vertical-align: middle;
 }
 
+pre.debug-quick-look-raw {
+	background-color: #fff;
+	color: #000;
+	margin: 0;
+	padding: 15px;
+	font-size: 14px;
+	line-height: 22px;
+	white-space: pre-wrap;
+	white-space: -moz-pre-wrap;
+	white-space: -pre-wrap;
+	white-space: -o-pre-wrap;
+	word-wrap: break-word;
+}

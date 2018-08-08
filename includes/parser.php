@@ -16,9 +16,11 @@ use DebugQuickLook\Formatting as Formatting;
 /**
  * Kick off our parsing action.
  *
+ * @param  boolean $parse  Whether to actually parse the file.
+ *
  * @return void
  */
-function run_parse() {
+function run_parse( $parse = true ) {
 
 	// Check to see if we have our constant.
 	$hascon = Helpers\maybe_constant_set();
@@ -31,8 +33,21 @@ function run_parse() {
 	// Add the new die handler.
 	add_filter( 'wp_die_handler', __NAMESPACE__ . '\die_handler' );
 
+	// Set our debug log file.
+	$debug_file = Helpers\get_debug_file();
+
+	// If we didn't wanna parse the file, do it raw.
+	if ( ! $parse ) {
+
+		// Get our raw file.
+		$raw_debug  = file_get_contents( $debug_file );
+
+		// And die with the raw.
+		wp_die( '<pre class="debug-quick-look-raw">' . $raw_debug . '</pre>', __( 'Viewing Raw Debug', 'debug-quick-look' ) );
+	}
+
 	// Parse it.
-	$parsed = parse_debug_file( Helpers\get_debug_file() );
+	$parsed = parse_debug_file( $debug_file );
 
 	// And show the world.
 	wp_die( $parsed['display'], __( 'View Your File', 'debug-quick-look' ), array( 'totals' => absint( $parsed['totals'] ) ) );

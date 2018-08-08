@@ -59,6 +59,10 @@ function run_quicklook_action() {
 			Parser\run_parse();
 			break;
 
+		case 'raw' :
+			Parser\run_parse( false );
+			break;
+
 		case 'purge' :
 			Helpers\purge_debug_file();
 			break;
