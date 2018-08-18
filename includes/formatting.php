@@ -340,6 +340,9 @@ function format_json_array( $maybe_json ) {
 			// If the value isn't an array, make a basic list item.
 			if ( ! is_array( $value ) ) {
 
+				// Normalize value.
+				$value = var_export( $value, true );
+
 				// Just wrap the piece as per usual.
 				$build .= '<span class="log-entry-json-array-piece">' . esc_html( $value ) . '</span>';
 
