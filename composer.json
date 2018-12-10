@@ -1,0 +1,21 @@
+{
+    "name": "norcross/debug-quick-look",
+    "description": "Creates an admin bar link to view or purge the debug log file.",
+    "type": "wordpress-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrew Norcross",
+            "email": "andrew@andrewnorcross.com",
+            "homepage": "https://github.com/norcross"
+        }
+    ],
+    "require": {
+        "php": ">=5.4"
+    },
+    "autoload": {
+        "files": [
+            "debug-quick-look.php"
+        ]
+    }
+}
