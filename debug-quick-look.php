@@ -107,7 +107,7 @@ class DebugQuickLook {
 		}
 
 		// Set my path file.
-		$pfile  = WP_CONTENT_DIR . '/debug.log';
+		$pfile  = ini_get( 'error_log' );
 
 		// If no file exists at all, create an empty one.
 		if ( false === file_exists( $pfile ) ) {
@@ -168,7 +168,7 @@ class DebugQuickLook {
 		} else {
 
 			// Set our file.
-			$file   = WP_CONTENT_DIR . '/debug.log';
+			$file   = ini_get( 'error_log' );
 
 			// We requested a viewing.
 			if ( 'view' === sanitize_key( $_GET['quickaction'] ) ) {
