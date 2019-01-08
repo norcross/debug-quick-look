@@ -168,7 +168,7 @@ class DebugQuickLook {
 		} else {
 
 			// Set our file.
-			$file   = WP_CONTENT_DIR . '/debug.log';
+			$file   = ini_get( 'error_log' );
 
 			// We requested a viewing.
 			if ( 'view' === sanitize_key( $_GET['quickaction'] ) ) {
